@@ -67,8 +67,6 @@ class Product:
             else:
                 pass
                             
-
-
 class Filter:
     def __init__(self, price_above, price_below, categories_included, suppliers_included, products_included, filter_applied):
         self.price_above = price_above
@@ -353,238 +351,238 @@ class Category:
 def prompt_user():
     first_menu_input = input("\nWhich of the following would you like to do (select using only the number): (1) Manage/view suppliers (2) Manage/view product information or stock (3) Manage/view product categories (4) Manage/view filter settings: ")
     try:
-    match int(first_menu_input):
-        case 1:
-            second_menu_input = input("\nWhat would you like to do with your supplier(s)? (select using only the number): (1) View current suppliers (2) Add a new supplier (3) Remove existing supplier(s) (4) Alter an existing supplier (5) Go back: ")
-            match int(second_menu_input):
-                case 1:
-                    if newFilter.filter_applied == 'True':
-                        print("The current list of suppliers (with the current filter applied) is: \n")
-                        for index, row in supp_df.iterrows():
-                            if row['name'] in newFilter.suppliers_included:
-                                print(row)
-                            else:
-                                continue
-                    else:
-                        print("The current list of suppliers is:")
-                        print("\n",supp_df)
-                case 2:
-                    if len(supp_df) > 0:
-                        supplier_id = (int(supp_df.iloc[-1].supplier_id) + 1)
-                    else:
-                        supplier_id = 1
-                    name = input("What is the supplier name?: ")
-                    contact_info = input("What is the supplier's contact info? Separate methods by commas without spaces e.g. exemail@gmail.com,931-999-9999: ")
-                    newSupplier = Supplier(supplier_id, name, contact_info)
-                    newSupplier.add_supplier(newSupplier)
-                case 3:
-                    removal_input = input("What supplier would you like to remove? (specify using case-sensitive name or ID): ")
-                    newSupplier = Supplier(removal_input, removal_input, 'None')
-                    newSupplier.remove_supplier(removal_input)
-                case 4:
-                    change_input = input("What supplier would you like to change? (specify using case-sensitive name or ID): ")
-                    newSupplier = Supplier(change_input, change_input, 'None')
-                    newSupplier.update_supplier_info(change_input)
-                case 5:
-                    prompt_user()
-        case 2:
-            second_menu_input = input("\nWhat would you like to do with the item(s)? (select using only the number): (1) View current products/inventory (2) Add a new product (3) Remove existing products (4) Alter an existing product (5) Verify expiration dates (6) Search for a specific product (7) Go Back: ")
-            match int(second_menu_input):
-                case 1:
-                    if newFilter.filter_applied == 'True':
-                        print("The current list of products and inventory (with the current filter applied) is: \n")
-                        for index, row in inv_df.iterrows():
-                            if row['name'] in newFilter.products_included:
-                                print(row)
-                            else:
-                                continue
-                    else:
-                        print("The current list of products and inventory is:")
-                        print("\n",inv_df)
-                case 2:
-                    product_id = (len(inv_df) + 1)
-                    name = input("What is the name of the new product?: ")
-                    try:
-                        print(f'Current product categories: \n\n{cat_df}\n')
-                    except KeyError:
-                        print("No categories detected! ")
-                    category = input("What category is the item part of?: ")
-                    if category in cat_df.values:
-                        pass
-                    else:
-                        print(f'The category \"{category}\" does not exist...')
-                        prompt_user()
-                    quantity = input("How many of the item do we have to start with (0 if none)?: ")
-                    if int(quantity) < 0:
-                        print("Quantity must be a positive number...")
-                        prompt_user()
-                    price = input("What is the starting price of the item (leave off the dollar sign, e.g. 19.99)?: ")
-                    if float(price) <= 0:
-                        print("Price must be a positive number...")
-                    expiration_date = input("When does the oldest stock of this item expire? (format YYYY/MM/DD): ")
-                    print(f'\nCurrent suppliers: \n{supp_df}\n')
-                    supplier = input("What supplier did the item come from?: ")
-                    if supplier in supp_df.values:
-                        pass
-                    else:
-                        print(f'The supplier \"{supplier}\" does not exist...')
-                        prompt_user()
-                    newProduct = Product(product_id, name, category, quantity, price, expiration_date, supplier)
-                    newInventory.add_product(newProduct)
-                case 3:
-                    removal_input = input("What product would you like to remove? (specify using case-sensitive name or ID): ")
-                    newInventory.remove_product(removal_input)
-                case 4:
-                    change_input = input("What product would you like to change? (specify using case-sensitive name or ID): ")
-                    newInventory.update_inventory(change_input)
-                case 5:
-                    today_pre = str(datetime.date.today())
-                    today = datetime.datetime.today().strptime(today_pre, '%Y-%m-%d')
-                    expiration_input = input("\nHow far away would you like to check if there are any expirations for? (select using only the number): (1) One week (2) Two weeks (3) One month (4) Two months (5) Six Months (6) One year: ")
-                    newProduct = Product(0, 'None', 'None',  0, 0, 'None', 'None')
-                    newProduct.check_expiration(today, expiration_input)
-                case 6:
-                    search_term = str(input("Please input the name of the item to be searched for: "))
-                    newInventory.search_product(search_term)
-                case 7:
-                    prompt_user()
-        case 3:
-            second_menu_input = input("\nWhat would you like to do with the product categories? (1) View current categories (2) Add a new category (3) Remove an existing category (4) List products by category (5) Go back: ")
-            match int(second_menu_input):
-                case 1:
-                    if newFilter.filter_applied == 'True':
-                        print("The current list of categories (with the current filter applied) is: \n")
-                        for index, row in cat_df.iterrows():
-                            if row['name'] in newFilter.categories_included:
-                                print(row)
-                            else:
-                                continue
-                    else:
-                        print("The current list of categories is:")
-                        print("\n",cat_df)
-                case 2:
-                    name = input("What is the new category going to be called?: ")
-                    description = input("Briefly describe the category: ")
-                    newCategory = Category(name, description)
-                    newCategory.add_category(newCategory)
-                case 3:
-                    removal_input = input("What is the name of the category you wish to remove?: ")
-                    newCategory = Category(removal_input, removal_input)
-                    newCategory.remove_category(removal_input)
-                case 4:
-                    print("The current list of product categories is: ")
-                    print("\n", cat_df)
-                    list_input = input("\nWhich category would you like to see the products within?:")
-                    print(f'The products within the \"{list_input}\" category are: \n')
-                    for index, row in inv_df.iterrows():
-                        if row['category'] == str(list_input):
-                            print("> ", row['name'])
-                        else:
-                            continue
-                case 5:
-                    prompt_user()
-        case 4:
-            second_menu_input = input("\nWhat would you like to do with the filter? (select using only the number): (1) View current filter settings (2) Create/edit filter settings (3) Apply filter (4) Disable filter (5) Go back: ")
-            match int(second_menu_input):
-                case 1:
-                    if any(getattr(newFilter, attr, '') for attr in ['price_above', 'price_below', 'categories_included', 'suppliers_included', 'products_included', 'filter_applied']):
-                        print(f'\nPrice range: ${newFilter.price_above} - ${newFilter.price_below}')
-                        print(f'Categories included:')
-                        for item in newFilter.categories_included:
-                            print(f'- {item}')
-                        print(f'Suppliers included:')
-                        for item in newFilter.suppliers_included:
-                            print(f'- {item}')
-                        print(f'Products included:')
-                        for item in newFilter.products_included:
-                            print(f'- {item}')
+        match int(first_menu_input):
+            case 1:
+                second_menu_input = input("\nWhat would you like to do with your supplier(s)? (select using only the number): (1) View current suppliers (2) Add a new supplier (3) Remove existing supplier(s) (4) Alter an existing supplier (5) Go back: ")
+                match int(second_menu_input):
+                    case 1:
                         if newFilter.filter_applied == 'True':
-                            print("> Filter is applied <")
+                            print("The current list of suppliers (with the current filter applied) is: \n")
+                            for index, row in supp_df.iterrows():
+                                if row['name'] in newFilter.suppliers_included:
+                                    print(row)
+                                else:
+                                    continue
                         else:
-                            print("\n> Filter is not applied <")
-                    else:
-                        print("There is currently no filter configured...")
-                case 2:
-                    if not any(getattr(newFilter, attr, '') for attr in ['price_above', 'price_below', 'categories_included', 'suppliers_included', 'products_included', 'filter_applied']):
-                        #newFilter = Filter('Not configured', 'Not configured', 'Not configured', 'Not configured', 'Not configured', 'False')
-                        filter_confirmation = input("There is not currently a filter configured. Would you like to make one? (Y)es (N)o: ")
-                        if str(filter_confirmation).upper() == "YES" or str(filter_confirmation).upper() == "Y":
-                            price_input_confirm = input("Would you like to set a price floor and ceiling? (Y)es (N)o: ")
-                            if str(price_input_confirm).upper() == "YES" or str(price_input_confirm).upper() == "Y":
-                                newFilter.price_above = float(input("What is the minimum price you would like to include? (leave off the dollar sign, e.g. 19.99): "))
-                                newFilter.price_below = float(input("What is the maximum price you would like to include? (leave off the dollar sign, e.g. 19.99): "))
-                            else:
-                                newFilter.price_above = 'Not configured'
-                                newFilter.price_below = 'Not configured'
-                            category_input_confirm = input("Would you like to set a predefined list of categories to include? (Y)es (N)o: ")
-                            if str(category_input_confirm).upper() == "YES" or str(category_input_confirm).upper() == "Y":
-                                print(f'The current list of categories is: \n{cat_df}\n')
-                                categories_included_pre = input("Please input the list of categories you would like to include (items separated by commas without spaces, e.g. dairy,toys,medicine): ").split(",")
-                                new_categories = []
-                                for item in categories_included_pre:
-                                    if item in cat_df.values:
-                                        new_categories.append(item)
-                                    else:
-                                        print(f'Category {item} not found...')
-                                if len(new_categories) > 0:
-                                    newFilter.categories_included = new_categories
-                                    print(f'Categories {new_categories} successfully required!')
-                                else:
-                                    print("No valid categories detected, filter unchanged...")
-                            else:
-                                categories_included = 'Not configured'
-                            supplier_input_confirm = input("Would you like to set a predefined list of suppliers to include? (Y)es (N)o: ")
-                            if str(supplier_input_confirm).upper() == "YES" or str(supplier_input_confirm).upper() == "Y":
-                                print(f'The current list of suppliers is: \n{supp_df}\n')
-                                suppliers_included_pre = input("Please input the list of suppliers you would like to include (items separated by commas without spaces, e.g. supplier1,supplier2,supplier3): ").split(",")
-                                new_suppliers = []
-                                for item in suppliers_included_pre:
-                                    if item in supp_df.values:
-                                        new_suppliers.append(item)
-                                    else:
-                                        print(f'Supplier {item} not found...')
-                                if len(new_suppliers) > 0:
-                                    newFilter.suppliers_included = new_suppliers
-                                    print(f'Supplier(s) {new_suppliers} successfully required!')
-                                else:
-                                    print("No valid suppliers detected, filter unchanged...")
-                            else:
-                                suppliers_included = 'Not configured'
-                            product_input_confirm = input("Would you like to set a predefined list of products to include? (Y)es (N)o: ")
-                            if str(product_input_confirm).upper() == "YES" or str(product_input_confirm).upper() == "Y":
-                                print(f'The current list of products is: \n{inv_df}\n')
-                                products_included_pre = input("Please input the list of products you would like to include (items separated by commas without spaces, e.g. cheese,nutcracker,ibuprofen): ").split(",")
-                                new_products = []
-                                for item in products_included_pre:
-                                    if item in inv_df.values:
-                                        new_products.append(item)
-                                    else:
-                                        print(f'Product {item} not found...')
-                                if len(new_products) > 0:
-                                    newFilter.products_included = new_products
-                                    print(f'Product(s) {new_products} successfully required!')
-                                else:
-                                    print("No valid products detected, filter unchanged...")
-                            else:
-                                products_included = 'Not configured'
-                            filter_applied_confirm = input("Would you like to apply this new filter after it is created? (Y)es (N)o: ")
-                            if str(filter_applied_confirm).upper() == "YES" or str(filter_applied_confirm).upper() == "Y":
-                                newFilter.apply_filter()
-                            else:
-                                newFilter.remove_filter()
+                            print("The current list of suppliers is:")
+                            print("\n",supp_df)
+                    case 2:
+                        if len(supp_df) > 0:
+                            supplier_id = (int(supp_df.iloc[-1].supplier_id) + 1)
                         else:
+                            supplier_id = 1
+                        name = input("What is the supplier name?: ")
+                        contact_info = input("What is the supplier's contact info? Separate methods by commas without spaces e.g. exemail@gmail.com,931-999-9999: ")
+                        newSupplier = Supplier(supplier_id, name, contact_info)
+                        newSupplier.add_supplier(newSupplier)
+                    case 3:
+                        removal_input = input("What supplier would you like to remove? (specify using case-sensitive name or ID): ")
+                        newSupplier = Supplier(removal_input, removal_input, 'None')
+                        newSupplier.remove_supplier(removal_input)
+                    case 4:
+                        change_input = input("What supplier would you like to change? (specify using case-sensitive name or ID): ")
+                        newSupplier = Supplier(change_input, change_input, 'None')
+                        newSupplier.update_supplier_info(change_input)
+                    case 5:
+                        prompt_user()
+            case 2:
+                second_menu_input = input("\nWhat would you like to do with the item(s)? (select using only the number): (1) View current products/inventory (2) Add a new product (3) Remove existing products (4) Alter an existing product (5) Verify expiration dates (6) Search for a specific product (7) Go Back: ")
+                match int(second_menu_input):
+                    case 1:
+                        if newFilter.filter_applied == 'True':
+                            print("The current list of products and inventory (with the current filter applied) is: \n")
+                            for index, row in inv_df.iterrows():
+                                if row['name'] in newFilter.products_included:
+                                    print(row)
+                                else:
+                                    continue
+                        else:
+                            print("The current list of products and inventory is:")
+                            print("\n",inv_df)
+                    case 2:
+                        product_id = (len(inv_df) + 1)
+                        name = input("What is the name of the new product?: ")
+                        try:
+                            print(f'Current product categories: \n\n{cat_df}\n')
+                        except KeyError:
+                            print("No categories detected! ")
+                        category = input("What category is the item part of?: ")
+                        if category in cat_df.values:
+                            pass
+                        else:
+                            print(f'The category \"{category}\" does not exist...')
                             prompt_user()
-                    else:
-                        change_filter_input = input("\nWhat would you like to change about the filter (select using only the number)? (1) Minimum price to include (2) Maximum price to include (3) Categories to include (4) Suppliers to include (5) Products to include (6) Go back: ")
-                        newFilter.edit_filter(change_filter_input)
-                case 3:
-                    newFilter.apply_filter()
-                    print("Filter is now applied!")
-                case 4:
-                    newFilter.remove_filter()
-                    print("Filter has been disabled")
-        case _:
-            print("Please select an option from the menu using just the option's number...")
+                        quantity = input("How many of the item do we have to start with (0 if none)?: ")
+                        if int(quantity) < 0:
+                            print("Quantity must be a positive number...")
+                            prompt_user()
+                        price = input("What is the starting price of the item (leave off the dollar sign, e.g. 19.99)?: ")
+                        if float(price) <= 0:
+                            print("Price must be a positive number...")
+                        expiration_date = input("When does the oldest stock of this item expire? (format YYYY/MM/DD): ")
+                        print(f'\nCurrent suppliers: \n{supp_df}\n')
+                        supplier = input("What supplier did the item come from?: ")
+                        if supplier in supp_df.values:
+                            pass
+                        else:
+                            print(f'The supplier \"{supplier}\" does not exist...')
+                            prompt_user()
+                        newProduct = Product(product_id, name, category, quantity, price, expiration_date, supplier)
+                        newInventory.add_product(newProduct)
+                    case 3:
+                        removal_input = input("What product would you like to remove? (specify using case-sensitive name or ID): ")
+                        newInventory.remove_product(removal_input)
+                    case 4:
+                        change_input = input("What product would you like to change? (specify using case-sensitive name or ID): ")
+                        newInventory.update_inventory(change_input)
+                    case 5:
+                        today_pre = str(datetime.date.today())
+                        today = datetime.datetime.today().strptime(today_pre, '%Y-%m-%d')
+                        expiration_input = input("\nHow far away would you like to check if there are any expirations for? (select using only the number): (1) One week (2) Two weeks (3) One month (4) Two months (5) Six Months (6) One year: ")
+                        newProduct = Product(0, 'None', 'None',  0, 0, 'None', 'None')
+                        newProduct.check_expiration(today, expiration_input)
+                    case 6:
+                        search_term = str(input("Please input the name of the item to be searched for: "))
+                        newInventory.search_product(search_term)
+                    case 7:
+                        prompt_user()
+            case 3:
+                second_menu_input = input("\nWhat would you like to do with the product categories? (1) View current categories (2) Add a new category (3) Remove an existing category (4) List products by category (5) Go back: ")
+                match int(second_menu_input):
+                    case 1:
+                        if newFilter.filter_applied == 'True':
+                            print("The current list of categories (with the current filter applied) is: \n")
+                            for index, row in cat_df.iterrows():
+                                if row['name'] in newFilter.categories_included:
+                                    print(row)
+                                else:
+                                    continue
+                        else:
+                            print("The current list of categories is:")
+                            print("\n",cat_df)
+                    case 2:
+                        name = input("What is the new category going to be called?: ")
+                        description = input("Briefly describe the category: ")
+                        newCategory = Category(name, description)
+                        newCategory.add_category(newCategory)
+                    case 3:
+                        removal_input = input("What is the name of the category you wish to remove?: ")
+                        newCategory = Category(removal_input, removal_input)
+                        newCategory.remove_category(removal_input)
+                    case 4:
+                        print("The current list of product categories is: ")
+                        print("\n", cat_df)
+                        list_input = input("\nWhich category would you like to see the products within?:")
+                        print(f'The products within the \"{list_input}\" category are: \n')
+                        for index, row in inv_df.iterrows():
+                            if row['category'] == str(list_input):
+                                print("> ", row['name'])
+                            else:
+                                continue
+                    case 5:
+                        prompt_user()
+            case 4:
+                second_menu_input = input("\nWhat would you like to do with the filter? (select using only the number): (1) View current filter settings (2) Create/edit filter settings (3) Apply filter (4) Disable filter (5) Go back: ")
+                match int(second_menu_input):
+                    case 1:
+                        if any(getattr(newFilter, attr, '') for attr in ['price_above', 'price_below', 'categories_included', 'suppliers_included', 'products_included', 'filter_applied']):
+                            print(f'\nPrice range: ${newFilter.price_above} - ${newFilter.price_below}')
+                            print(f'Categories included:')
+                            for item in newFilter.categories_included:
+                                print(f'- {item}')
+                            print(f'Suppliers included:')
+                            for item in newFilter.suppliers_included:
+                                print(f'- {item}')
+                            print(f'Products included:')
+                            for item in newFilter.products_included:
+                                print(f'- {item}')
+                            if newFilter.filter_applied == 'True':
+                                print("> Filter is applied <")
+                            else:
+                                print("\n> Filter is not applied <")
+                        else:
+                            print("There is currently no filter configured...")
+                    case 2:
+                        if not any(getattr(newFilter, attr, '') for attr in ['price_above', 'price_below', 'categories_included', 'suppliers_included', 'products_included', 'filter_applied']):
+                            #newFilter = Filter('Not configured', 'Not configured', 'Not configured', 'Not configured', 'Not configured', 'False')
+                            filter_confirmation = input("There is not currently a filter configured. Would you like to make one? (Y)es (N)o: ")
+                            if str(filter_confirmation).upper() == "YES" or str(filter_confirmation).upper() == "Y":
+                                price_input_confirm = input("Would you like to set a price floor and ceiling? (Y)es (N)o: ")
+                                if str(price_input_confirm).upper() == "YES" or str(price_input_confirm).upper() == "Y":
+                                    newFilter.price_above = float(input("What is the minimum price you would like to include? (leave off the dollar sign, e.g. 19.99): "))
+                                    newFilter.price_below = float(input("What is the maximum price you would like to include? (leave off the dollar sign, e.g. 19.99): "))
+                                else:
+                                    newFilter.price_above = 'Not configured'
+                                    newFilter.price_below = 'Not configured'
+                                category_input_confirm = input("Would you like to set a predefined list of categories to include? (Y)es (N)o: ")
+                                if str(category_input_confirm).upper() == "YES" or str(category_input_confirm).upper() == "Y":
+                                    print(f'The current list of categories is: \n{cat_df}\n')
+                                    categories_included_pre = input("Please input the list of categories you would like to include (items separated by commas without spaces, e.g. dairy,toys,medicine): ").split(",")
+                                    new_categories = []
+                                    for item in categories_included_pre:
+                                        if item in cat_df.values:
+                                            new_categories.append(item)
+                                        else:
+                                            print(f'Category {item} not found...')
+                                    if len(new_categories) > 0:
+                                        newFilter.categories_included = new_categories
+                                        print(f'Categories {new_categories} successfully required!')
+                                    else:
+                                        print("No valid categories detected, filter unchanged...")
+                                else:
+                                    categories_included = 'Not configured'
+                                supplier_input_confirm = input("Would you like to set a predefined list of suppliers to include? (Y)es (N)o: ")
+                                if str(supplier_input_confirm).upper() == "YES" or str(supplier_input_confirm).upper() == "Y":
+                                    print(f'The current list of suppliers is: \n{supp_df}\n')
+                                    suppliers_included_pre = input("Please input the list of suppliers you would like to include (items separated by commas without spaces, e.g. supplier1,supplier2,supplier3): ").split(",")
+                                    new_suppliers = []
+                                    for item in suppliers_included_pre:
+                                        if item in supp_df.values:
+                                            new_suppliers.append(item)
+                                        else:
+                                            print(f'Supplier {item} not found...')
+                                    if len(new_suppliers) > 0:
+                                        newFilter.suppliers_included = new_suppliers
+                                        print(f'Supplier(s) {new_suppliers} successfully required!')
+                                    else:
+                                        print("No valid suppliers detected, filter unchanged...")
+                                else:
+                                    suppliers_included = 'Not configured'
+                                product_input_confirm = input("Would you like to set a predefined list of products to include? (Y)es (N)o: ")
+                                if str(product_input_confirm).upper() == "YES" or str(product_input_confirm).upper() == "Y":
+                                    print(f'The current list of products is: \n{inv_df}\n')
+                                    products_included_pre = input("Please input the list of products you would like to include (items separated by commas without spaces, e.g. cheese,nutcracker,ibuprofen): ").split(",")
+                                    new_products = []
+                                    for item in products_included_pre:
+                                        if item in inv_df.values:
+                                            new_products.append(item)
+                                        else:
+                                            print(f'Product {item} not found...')
+                                    if len(new_products) > 0:
+                                        newFilter.products_included = new_products
+                                        print(f'Product(s) {new_products} successfully required!')
+                                    else:
+                                        print("No valid products detected, filter unchanged...")
+                                else:
+                                    products_included = 'Not configured'
+                                filter_applied_confirm = input("Would you like to apply this new filter after it is created? (Y)es (N)o: ")
+                                if str(filter_applied_confirm).upper() == "YES" or str(filter_applied_confirm).upper() == "Y":
+                                    newFilter.apply_filter()
+                                else:
+                                    newFilter.remove_filter()
+                            else:
+                                prompt_user()
+                        else:
+                            change_filter_input = input("\nWhat would you like to change about the filter (select using only the number)? (1) Minimum price to include (2) Maximum price to include (3) Categories to include (4) Suppliers to include (5) Products to include (6) Go back: ")
+                            newFilter.edit_filter(change_filter_input)
+                    case 3:
+                        newFilter.apply_filter()
+                        print("Filter is now applied!")
+                    case 4:
+                        newFilter.remove_filter()
+                        print("Filter has been disabled")
+            case _:
+                print("Please select an option from the menu using just the option's number...")
     except ValueError:
         print("Invalid input...")
     
