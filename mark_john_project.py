@@ -352,7 +352,7 @@ class Category:
         
 def prompt_user():
     first_menu_input = input("\nWhich of the following would you like to do (select using only the number): (1) Manage/view suppliers (2) Manage/view product information or stock (3) Manage/view product categories (4) Manage/view filter settings: ")
-    #try:
+    try:
     match int(first_menu_input):
         case 1:
             second_menu_input = input("\nWhat would you like to do with your supplier(s)? (select using only the number): (1) View current suppliers (2) Add a new supplier (3) Remove existing supplier(s) (4) Alter an existing supplier (5) Go back: ")
@@ -585,8 +585,8 @@ def prompt_user():
                     print("Filter has been disabled")
         case _:
             print("Please select an option from the menu using just the option's number...")
-    #except ValueError:
-        #print("Invalid input...")
+    except ValueError:
+        print("Invalid input...")
     
 def db_create():
     if os.path.isfile("csi_260_Mark_John.db"):
