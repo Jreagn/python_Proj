@@ -68,9 +68,7 @@ class Product:
                 print(f"> {row['name']} at {datetime.datetime.strptime(row['expiration_date'], '%Y/%m/%d')}")
             else:
                 pass
-                            
-
-
+                        
 class Filter:
     def __init__(self, price_above, price_below, categories_included, suppliers_included, products_included, filter_applied):
         self.price_above = price_above
@@ -120,13 +118,13 @@ class Filter:
                 new_products_pre = input("\nWhat products would you like to include (items separated by commas without spaces, e.g. cheese,nutcracker,ibuprofen): ").split(",")
                 new_products = []
                 for item in new_products_pre:
-                    if item in prod_df.values:
+                    if item in inv_df.values:
                         new_products.append(item)
                     else:
                         print(f'Product {item} not found...')
                 if len(new_products) > 0:
                     newFilter.products_included = new_products
-                    print(f'New products {new_categories} successfully included!')
+                    print(f'New products {new_products} successfully included!')
                 else:
                     print("No valid products detected, filter unchanged...")
             case 6:
@@ -149,13 +147,25 @@ class Transaction:
         self.payment_method = payment_method
         
     def add_transaction(self):
-        print("add_transaction executed")
+        cursor.execute("INSERT INTO transactions (transaction_id, total_cost, items_purchased, transaction_date, payment_method) VALUES (?, ?, ?, ?, ?)", (self.transaction_id, self.total_cost, self.items_purchased, self.transaction_date, self.payment_method))
+        conn.commit()
+        print(f'New transaction {self.transaction_id} added successfully!')
         
-    def undo_transaction(self):
-        print("undo_transaction executed")
-        
-    def edit_transaction(self):
-        print("edit_transaction executed")
+    def edit_transaction(self, transaction_change_input):
+        try:
+            cursor.execute(f'SELECT * FROM transactions WHERE transaction_id = "{transaction_change_input}"')
+            print("Current changeable parts of this product: \n")
+            for column in tran_df.columns.tolist():
+                print(column)
+            transaction_change_field = input("\nWhat would you like to change about this transaction?: ")
+            if transaction_change_field in tran_df.columns.tolist():
+                transaction_new_field = input(f"What should the new value of {transaction_change_field} be?: ")
+                cursor.execute(f'UPDATE transactions SET {transaction_change_field} = "{transaction_new_field}" WHERE transaction_id = {transaction_change_input}')
+                conn.commit()
+                print(f"Transaction with ID {transaction_change_input} successfully updated!")
+        except sqlite3.OperationalError:
+            print("That transaction ID seems invalid...")
+            prompt_user()
 
 class Inventory:
     """Inventory Class"""
@@ -270,11 +280,37 @@ class Inventory:
             print("That product doesn't seem to exist...")
         
     def generate_report(self):
-
-        for index,row in inv_df.iterrows():
-            print(f'The current stock of {row['name']} is {row['quantity']}')
-
-      
+        print("\n")
+        stock_count = 0
+        if newFilter.filter_applied == 'True' and len(newFilter.products_included) > 0:
+            for index,row in inv_df.iterrows():
+                if row["name"] in newFilter.products_included:
+                    stock_count += int(row["quantity"])
+                    print(f'The current stock of {row["name"]} is {row["quantity"]}')
+            print(f'The current total stock of all products in the filter is: {stock_count}')
+        else:
+            for index,row in inv_df.iterrows():
+                stock_count += int(row["quantity"])
+                print(f'The current stock of {row["name"]} is {row["quantity"]}')
+            print(f'The current total stock of all products in inventory is: {stock_count}')
+            print("Showing a pop-out window graph of products in inventory...")
+            
+        figure,ax = plt.subplots()
+        if newFilter.filter_applied == 'True' and len(newFilter.products_included) > 0:
+            figure_items = newFilter.products_included
+            figure_values = []
+            for index,row in inv_df.iterrows():
+                if row["name"] in newFilter.products_included:
+                    figure_values.append(row["quantity"])
+        else:
+            figure_items = [row["name"] for index,row in inv_df.iterrows()]
+            figure_values = [row["quantity"] for index,row in inv_df.iterrows()]
+            
+        ax.bar(figure_items, figure_values)
+        ax.set_ylabel('Products in inventory')
+        ax.set_xlabel('Count')
+        plt.show()
+        
 class Supplier:
     def __init__(self, supplier_id, name, contact_info):
         self.supplier_id = supplier_id
@@ -360,7 +396,7 @@ class Category:
         print("list_products_by_category ran")
         
 def prompt_user():
-    first_menu_input = input("\nWhich of the following would you like to do (select using only the number): \n(1) Manage/view suppliers \n(2) Manage/view product information or stock \n(3) Manage/view product categories \n(4) Manage/view filter settings: \n(5) Generate Report: ")
+    first_menu_input = input("\nWhich of the following would you like to do (select using only the number): \n(1) Manage/view suppliers \n(2) Manage/view product information or stock \n(3) Manage/view product categories \n(4) Manage/view filter settings \n(6) Manage/view transactions \n(7) Export data to CSV file \n(8) Generate Report: ")
     try:
         match int(first_menu_input):
             case 1:
@@ -592,19 +628,85 @@ def prompt_user():
                     case 4:
                         newFilter.remove_filter()
                         print("Filter has been disabled")
-            case 5:
+            case 6:
+                second_menu_input = input("\nWhat would you like to do with your transaction(s)? (select using only the number): \n(1) View past transactions \n(2) Add a new transaction \n(3) Edit a tranaction \n(4) Go back: ")
+                match int(second_menu_input):
+                    case 1:
+                        print("The current record of transactions is: ")
+                        print("\n", tran_df)
+                    case 2:
+                        transaction_id = len(tran_df) + 1
+                        items_purchased = input("What items were purchased? Separate items using commas without spaces e.g. cheese,nutcracker,ibuprofen: ")
+                        items_purchased_list = items_purchased.split(",")
+                        price = 0.00
+                        total_cost = 0.00
+                        for item in items_purchased_list:
+                            prior_quantity = 0
+                            if item in inv_df.values:
+                                item_quantity = int(input(f'How much {item} was purchased?: '))
+                            else:
+                                print("Please input a valid existing product name...")
+                                prompt_user()
+                            for index,row in inv_df.iterrows():
+                                if row['name'] == item:
+                                    if item_quantity > int(row['quantity']):
+                                        print("Purchase is for more items than in stock! Halting transaction...")
+                                        prompt_user()
+                                    price = float(row['price'])
+                                    prior_quantity = int(row['quantity'])
+                                    new_quantity = prior_quantity - item_quantity
+                                    cursor.execute(f"UPDATE inventory SET quantity = {new_quantity} WHERE name = '{row['name']}'")
+                            total_cost += (price * item_quantity)
+                        today = datetime.datetime.today().strptime(str(datetime.date.today()), '%Y-%m-%d')
+                        transaction_date = str(today)
+                        payment_method = input("What method did the customer use to purchase the item(s)?: ")
+                        newTransaction = Transaction(transaction_id, total_cost, items_purchased, transaction_date, payment_method)
+                        newTransaction.add_transaction()
+                        conn.commit()
+                        print("Quantity of item(s) purchased updated...")
+                    case 3:
+                        newTransaction = Transaction("","","","","")
+                        print("The record of past transactions is: ")
+                        print(tran_df)
+                        transaction_change_input = input("\nWhat transaction would you like to change? (specify using only transaction ID): ")
+                        newTransaction.edit_transaction(transaction_change_input)
+                    case 4:
+                        prompt_user()
+            case 7:
+                db_export()
+            case 8:
                 newInventory.generate_report()
             case _:
                 print("Please select an option from the menu using just the option's number...")
     except ValueError:
         print("Invalid input...")
-    
+    except UnboundLocalError:
+        print("Unidentified error, transaction halted...")
+
 def db_create():
     if os.path.isfile("csi_260_Mark_John.db"):
         pass
     else:
         dbcreation.main()
-
+    
+def db_export():
+    print("\nThe current list of database tables that can be exported is: \nsuppliers \ninventory \ncategories \ntransactions")
+    export_input = input("Which database table(s) would you like to export? Separate items using commas without spaces, e.g. suppliers,inventory,categories,transactions: ").split(",")
+    for item in export_input:
+        match item.lower():
+            case 'suppliers':
+                supp_df.to_csv('suppliers.csv', index=False)
+            case 'inventory':
+                inv_df.to_csv('inventory.csv', index=False)
+            case 'categories':
+                cat_df.to_csv('categories.csv', index=False)
+            case 'transactions':
+                tran_df.to_csv('transactions.csv', index=False)
+            case _:
+                print("Invalid database table name(s) detected...")
+                
+        print(f"Database table {item} exported as a CSV file!")
+        
 newFilter = Filter('', '', '', '', '', '')
 if __name__ == '__main__':
     os.system("@ECHO OFF > python3 -m pip install pandas")
@@ -618,5 +720,4 @@ if __name__ == '__main__':
         cat_df = pandas.read_sql_query("SELECT * FROM categories", conn)
         tran_df = pandas.read_sql_query("SELECT * FROM transactions", conn)
         newInventory = Inventory(inv_df)
-        #newInventory.generate_report()
         prompt_user()
