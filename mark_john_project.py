@@ -12,7 +12,13 @@ pandas.set_option('display.width', None)
 pandas.set_option('display.max_colwidth', None)
 
 class Product:
+    """
+        The Product class is used to manage items in the "Inventory" database table.
+    """
     def __init__(self, product_id, name, category, quantity, price, expiration_date, supplier):
+        """
+            The Product class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.product_id = product_id
         self.name = name
         self.category = category
@@ -22,6 +28,9 @@ class Product:
         self.supplier = supplier
         
     def add_stock(self, change_field, new_quantity, change_input):
+        """
+            add_stock places a pre-calculated new quantity of stock after an addition or subtraction by the user into the database where the old stock used to be.
+        """
         if str(change_input) in inv_df['name'].values:
             cursor.execute(f'UPDATE inventory SET {change_field} = "{new_quantity}" WHERE name = "{change_input}"')
         elif int(change_input) in inv_df['product_id'].value:
@@ -30,6 +39,10 @@ class Product:
         print("New stock added successfully!")
     
     def remove_stock(self, change_field, new_quantity, change_input):
+        """
+            remove_stock performs the same actions as add_stock with a slightly different method - this was done because the project requirements require both methods to be
+            separate, but I wrote one piece of code that works for both.
+        """
         if str(change_input) in inv_df['name'].values:
             cursor.execute(f'UPDATE inventory SET {change_field} = "{new_quantity}" WHERE name = "{change_input}"')
         elif int(change_input) in inv_df['product_id'].values:
@@ -38,14 +51,20 @@ class Product:
         print("Specified stock removed successfully!")
     
     def update_price(self, change_field, update_price, change_input):
+        """
+            update_price changes the price of a selected item in the database.
+        """
         if str(change_input) in inv_df['name'].values:
             cursor.execute(f'UPDATE inventory SET {change_field} = "{update_price}" WHERE name = "{change_input}"')
         elif str(change_input) in inv_df['product_id'].values:
-            cursor.execute(f'UPDATE inventory SET {change_field} = "{update_price}" WHERE name = "{change_input}"')
+            cursor.execute(f'UPDATE inventory SET {change_field} = "{update_price}" WHERE product_id = "{change_input}"')
         conn.commit()
         print("Price updated successfully!")
         
     def check_expiration(self, today, expiration_input):
+        """
+            check_expiration takes a user-specified window of time to check expirations within and outputs a list of those items.
+        """
         arg = 1
         match int(expiration_input):
             case 1:
@@ -62,15 +81,21 @@ class Product:
                 arg = 365
             case _:
                 arg = 7
-        print("The following items are set to expire within the specified window: \n")
-        for index, row in inv_df.iterrows():
+        print("The following items are set to expire within that window: \n")
+        for index, row in pandas.read_sql_query("SELECT * FROM inventory", conn).iterrows():
             if datetime.datetime.strptime(row['expiration_date'], "%Y/%m/%d") < today + datetime.timedelta(days=arg):
                 print(f"> {row['name']} at {datetime.datetime.strptime(row['expiration_date'], '%Y/%m/%d')}")
             else:
                 pass
                         
 class Filter:
+    """
+        The Filter class is used to create, manage, and implement a way to control what items are shown in outputs.
+    """
     def __init__(self, price_above, price_below, categories_included, suppliers_included, products_included, filter_applied):
+        """
+            The Filter class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.price_above = price_above
         self.price_below = price_below
         self.categories_included = categories_included
@@ -79,6 +104,9 @@ class Filter:
         self.filter_applied = filter_applied
         
     def edit_filter(self, change_filter_input):
+        """
+            edit_filter allows the user to specify what part of the existing filter they would like to change then specify a new value for that option.
+        """
         match int(change_filter_input):
             case 1:
                 new_min = float(input("\nWhat would you like the new minimum price to be (leave off the dollar sign, e.g. 19.99): "))
@@ -131,15 +159,25 @@ class Filter:
                 prompt_user()
         
     def apply_filter(self):
+        """
+            apply_filter sets the 'filter_applied' instance attribute to "True" to apply the filter to item outputs.
+        """
         self.filter_applied = 'True'
         
     def remove_filter(self):
+        """
+            remove_filter sets the 'filter_applied' instance attribute to "False" to remove the filter from item outputs.
+        """
         self.filter_applied = 'False'
 
 class Transaction:
-    """Transaction Class"""
-
+    """
+        The Transaction class is used to make and alter transactions made of the items in the database.
+    """
     def __init__(self, transaction_id, total_cost, items_purchased, transaction_date, payment_method):
+        """
+            The Transaction class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.transaction_id = transaction_id
         self.total_cost = total_cost
         self.items_purchased = items_purchased
@@ -147,11 +185,17 @@ class Transaction:
         self.payment_method = payment_method
         
     def add_transaction(self):
+        """
+            add_transaction takes the attributes of a transaction instance and uses them to create a new transaction in the database.
+        """
         cursor.execute("INSERT INTO transactions (transaction_id, total_cost, items_purchased, transaction_date, payment_method) VALUES (?, ?, ?, ?, ?)", (self.transaction_id, self.total_cost, self.items_purchased, self.transaction_date, self.payment_method))
         conn.commit()
         print(f'New transaction {self.transaction_id} added successfully!')
         
     def edit_transaction(self, transaction_change_input):
+        """
+            edit_transaction allows the user to specify a part of a previously specified transaction to alter, then changes that part in the database.
+        """
         try:
             cursor.execute(f'SELECT * FROM transactions WHERE transaction_id = "{transaction_change_input}"')
             print("Current changeable parts of this product: \n")
@@ -168,17 +212,27 @@ class Transaction:
             prompt_user()
 
 class Inventory:
-    """Inventory Class"""
-
+    """
+        The Inventory class is used to create and manage new items in the Inventory database table.
+    """
     def __init__(self, inventory_list):
+        """
+            The Inventory class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.inventory_list = inventory_list
         
     def add_product(self, newProduct):
+        """
+            add_product takes the attributes of a newly created Product instance and uses them to make a new item in the Inventory database table.
+        """
         cursor.execute("INSERT INTO inventory (product_id, name, category, quantity, price, expiration_date, supplier) VALUES (?, ?, ?, ?, ?, ?, ?)", (newProduct.product_id, newProduct.name, newProduct.category, newProduct.quantity, newProduct.price, newProduct.expiration_date, newProduct.supplier))
         conn.commit()
         print(f'New product {newProduct.name} added successfully!')
         
     def remove_product(self, removal_input):
+        """
+            remove_product takes a user-specified product and removes it from the database.
+        """
         try:
             cursor.execute(f'SELECT * FROM inventory WHERE name = "{removal_input}"')
             if cursor.fetchall() == []:
@@ -197,6 +251,9 @@ class Inventory:
             print("That product doesn't seem to exist...")
         
     def search_product(self, search_term):
+        """
+            search_product allows the user to give a keyword and search for all items involving that keyword in any field.
+        """
         if str(search_term) in inv_df.values or int(search_term) in inv_df.values:
             for index, row in inv_df.iterrows():
                 if str(search_term) in row.values or str(search_term) in row.values:
@@ -208,6 +265,9 @@ class Inventory:
                     print("\n========================================")
         
     def update_inventory(self, change_input):
+        """
+            update_inventory allows the user to specify an item to alter, then changes that part of the item in the database.
+        """
         try:
             cursor.execute(f'SELECT * FROM inventory WHERE name = "{change_input}"')
             if cursor.fetchall() == []:
@@ -280,6 +340,9 @@ class Inventory:
             print("That product doesn't seem to exist...")
         
     def generate_report(self):
+        """
+            generate_report creates a basic output about inventory statistics, then gives a pop-out window graph showing current inventory levels.
+        """
         print("\n")
         stock_count = 0
         if newFilter.filter_applied == 'True' and len(newFilter.products_included) > 0:
@@ -312,17 +375,29 @@ class Inventory:
         plt.show()
         
 class Supplier:
+    """
+        The Supplier class is used to create and manage new product suppliers in the Supplier database table
+    """
     def __init__(self, supplier_id, name, contact_info):
+        """
+            The Supplier class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.supplier_id = supplier_id
         self.name = name
         self.contact_info = contact_info
         
     def add_supplier(self, newSupplier):
+        """
+            add_supplier takes a supplier instance's attributes and uses them to create a new supplier in the database.
+        """
         cursor.execute("INSERT INTO suppliers (supplier_id, name, contact_info) VALUES (?, ?, ?)", (newSupplier.supplier_id, newSupplier.name, newSupplier.contact_info))
         conn.commit()
         print(f'New supplier {newSupplier.name} added successfully!\n')
         
     def remove_supplier(self, removal_input):
+        """
+            remove_supplier removes a supplier specified by the user from the database.
+        """
         try:
             cursor.execute(f'SELECT * FROM suppliers WHERE name = "{removal_input}"')
             if cursor.fetchall() == []:
@@ -340,6 +415,9 @@ class Supplier:
         except sqlite3.OperationalError:
             print("That supplier doesn't seem to exist...")
     def update_supplier_info(self, change_input):
+        """
+            update_supplier_info allows the user to specify what part of a selected supplier to change.
+        """
         try:
             cursor.execute(f'SELECT * FROM suppliers WHERE name = "{change_input}"')
             if cursor.fetchall() == []:
@@ -374,16 +452,28 @@ class Supplier:
             print("That supplier doesn't seem to exist...")
             
 class Category:
+    """
+        The Category class is used to create and manage new product categories in the Category database table.
+    """
     def __init__(self, category_name, description):
+        """
+            The Category class's __init__ method is used to initialize the class with its necessary attributes.
+        """
         self.category_name = category_name
         self.description = description
         
     def add_category(self, newCategory):
+        """
+            add_category takes an existing Category instance's attributes and uses them to create a new category in the database.
+        """
         cursor.execute("INSERT INTO categories (category_name, description) VALUES (?, ?)", (newCategory.category_name, newCategory.description))
         conn.commit()
         print(f'New supplier {newCategory.category_name} added successfully!\n')
         
     def remove_category(self, removal_input):
+        """
+            remove_category allows the user to select a category to remove from the database and then removes it.
+        """
         try:
             cursor.execute(f'SELECT * FROM categories WHERE category_name = "{removal_input}"')
             cursor.execute(f'DELETE FROM categories WHERE category_name = "{removal_input}"')
@@ -392,10 +482,11 @@ class Category:
         except sqlite3.OperationalError:
             print("That category doesn't seem to exist...")
         
-    def list_products_by_category(self):
-        print("list_products_by_category ran")
-        
 def prompt_user():
+    """
+        prompt_user is the main logical loop of the program, being used to present the user with a main text menu and resultant secondary text menus based on what they want to do. It is responsible for
+        calling most of the methods defined above.
+    """
     first_menu_input = input("\nWhich of the following would you like to do (select using only the number): \n(1) Manage/view suppliers \n(2) Manage/view product information or stock \n(3) Manage/view product categories \n(4) Manage/view filter settings \n(6) Manage/view transactions \n(7) Export data to CSV file \n(8) Generate Report: ")
     try:
         match int(first_menu_input):
@@ -684,12 +775,18 @@ def prompt_user():
         print("Unidentified error, transaction halted...")
 
 def db_create():
+    """
+        db_create checks if the database exists already, and if it doesn't, it calls the external module for creating it.
+    """
     if os.path.isfile("csi_260_Mark_John.db"):
         pass
     else:
         dbcreation.main()
     
 def db_export():
+    """
+        db_export allows the user to specify what data they want to export, then converts the selected database table(s) to CSV format and saves it to the current directory.
+    """
     print("\nThe current list of database tables that can be exported is: \nsuppliers \ninventory \ncategories \ntransactions")
     export_input = input("Which database table(s) would you like to export? Separate items using commas without spaces, e.g. suppliers,inventory,categories,transactions: ").split(",")
     for item in export_input:
@@ -709,11 +806,19 @@ def db_export():
         
 newFilter = Filter('', '', '', '', '', '')
 if __name__ == '__main__':
+    """
+        The main function is responsible for starting the program and getting the basics down by installing pandas (used for data display and retrieval), creating the database if necessary, making a connection,
+        and hosting the loop that keeps prompt_user continually going.
+    """
     os.system("@ECHO OFF > python3 -m pip install pandas")
     db_create()
     conn = sqlite3.connect('csi_260_Mark_John.db')
     cursor = conn.cursor()
-    
+    today_pre = str(datetime.date.today())
+    today = datetime.datetime.today().strptime(today_pre, '%Y-%m-%d')
+    newProduct = Product(0, 'None', 'None',  0, 0, 'None', 'None')
+    print("Checking for products expiring within a week...")
+    newProduct.check_expiration(today, 1)
     while True:
         supp_df = pandas.read_sql_query("SELECT * FROM suppliers", conn)
         inv_df = pandas.read_sql_query("SELECT * FROM inventory", conn)
@@ -721,3 +826,4 @@ if __name__ == '__main__':
         tran_df = pandas.read_sql_query("SELECT * FROM transactions", conn)
         newInventory = Inventory(inv_df)
         prompt_user()
+
